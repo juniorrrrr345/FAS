@@ -1162,14 +1162,14 @@ export default function ProductsManager() {
                 </div>
                 
                 <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {getAllPriceEntries().length === 0 ? (
+                  {getAllPriceEntries().filter(([_, value]) => value !== undefined).length === 0 ? (
                     <div className="text-center py-8 text-gray-400">
                       <p className="mb-2">Aucun prix défini</p>
-                      <p className="text-sm">Cliquez sur "➕ Ajouter prix" pour commencer</p>
-                      <p className="text-xs mt-2">Debug refresh: {refreshCounter}</p>
+                      <p className="text-sm">Utilisez les boutons de quantité ci-dessus ou</p>
+                      <p className="text-sm">cliquez sur "➕ Ajouter" pour une quantité personnalisée</p>
                     </div>
                   ) : (
-                    getAllPriceEntries().map(([priceKey, value]) => (
+                    getAllPriceEntries().filter(([_, value]) => value !== undefined).map(([priceKey, value]) => (
                     <div key={priceKey} className="flex items-center gap-3">
                       <div className="flex-1">
                         <label className="block text-xs text-gray-400 mb-1">Quantité</label>
@@ -1337,33 +1337,36 @@ export default function ProductsManager() {
                       </div>
                       
                       {/* Raccourcis mobiles */}
-                      <div className="flex flex-wrap gap-2">
-                        {['3g', '5g', '10g', '25g', '50g', '100g', '200g', '500g', '1kg'].map(quantity => (
-                          <button
-                            key={quantity}
-                            type="button"
-                            onClick={() => {
-                              console.log(`📱 Clic mobile sur: ${quantity}`);
-                              addNewPrice(quantity);
-                            }}
-                            className="bg-blue-600/20 border border-blue-400/30 hover:bg-blue-600/40 text-blue-300 text-xs py-1 px-2 rounded transition-all duration-200"
-                            title={`Ajouter ${quantity}`}
-                          >
-                            + {quantity}
-                          </button>
-                        ))}
+                      <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-3 mb-3">
+                        <p className="text-yellow-400 text-xs mb-2">💡 Cliquez sur une quantité pour l'ajouter :</p>
+                        <div className="flex flex-wrap gap-2">
+                          {['5g', '10g', '25g', '50g', '100g', '200g', '500g', '1kg'].map(quantity => (
+                            <button
+                              key={quantity}
+                              type="button"
+                              onClick={() => {
+                                console.log(`📱 Clic mobile sur: ${quantity}`);
+                                addNewPrice(quantity);
+                              }}
+                              className="bg-blue-600/20 border border-blue-400/30 hover:bg-blue-600/40 text-blue-300 text-xs py-1 px-2 rounded transition-all duration-200"
+                              title={`Ajouter ${quantity}`}
+                            >
+                              + {quantity}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                     
                     <div className="space-y-3 max-h-80 overflow-y-auto">
-                      {getAllPriceEntries().length === 0 ? (
-                        <div className="text-center py-8 text-gray-400">
-                          <p className="mb-2">Aucun prix défini</p>
-                          <p className="text-sm">Cliquez sur "➕ Ajouter prix" pour commencer</p>
-                          <p className="text-xs mt-2">Debug refresh mobile: {refreshCounter}</p>
-                        </div>
-                      ) : (
-                        getAllPriceEntries().map(([priceKey, value]) => (
+                                              {getAllPriceEntries().filter(([_, value]) => value !== undefined).length === 0 ? (
+                          <div className="text-center py-8 text-gray-400">
+                            <p className="mb-2">Aucun prix défini</p>
+                            <p className="text-sm">Utilisez les boutons de quantité ci-dessus ou</p>
+                            <p className="text-sm">cliquez sur "➕ Ajouter" pour une quantité personnalisée</p>
+                          </div>
+                        ) : (
+                        getAllPriceEntries().filter(([_, value]) => value !== undefined).map(([priceKey, value]) => (
                         <div key={priceKey} className="bg-gray-800/50 border border-white/10 rounded-lg p-3">
                           <div className="space-y-2">
                                                           <div>
