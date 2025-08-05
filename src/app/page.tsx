@@ -24,7 +24,19 @@ export default function HomePage() {
   
   // États pour les données - Initialiser avec des valeurs par défaut
   const [loading, setLoading] = useState(true); // Toujours true au départ
-  const [backgroundImage, setBackgroundImage] = useState<string>('');
+  // Initialiser backgroundImage depuis localStorage si disponible
+  const [backgroundImage, setBackgroundImage] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('shopSettings');
+      if (saved) {
+        try {
+          const settings = JSON.parse(saved);
+          return settings.backgroundImage || '';
+        } catch (e) {}
+      }
+    }
+    return '';
+  });
   
   // Gérer la logique de première visite côté client uniquement
   useEffect(() => {
@@ -246,13 +258,15 @@ export default function HomePage() {
                 <div className="relative w-40 h-40 mx-auto">
                   {/* Cercle avec image de fond qui tourne */}
                   <div className="absolute inset-0 rounded-full overflow-hidden animate-spin-slow border-4 border-white/20">
-                    <div 
-                      className="w-full h-full bg-cover bg-center opacity-80"
-                      style={{
-                        backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
-                        backgroundColor: backgroundImage ? 'transparent' : 'rgba(255, 255, 255, 0.1)'
-                      }}
-                    />
+                    {backgroundImage ? (
+                      <img 
+                        src={backgroundImage}
+                        alt="Loading"
+                        className="w-full h-full object-cover opacity-80"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-white/10" />
+                    )}
                   </div>
                   {/* Effet de brillance */}
                   <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/20 to-transparent animate-pulse"></div>
