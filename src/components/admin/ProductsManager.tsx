@@ -531,11 +531,7 @@ export default function ProductsManager() {
       }
     });
 
-    // Si aucun prix, ajouter au moins une ligne par défaut
-    if (Object.keys(allPrices).length === 0) {
-      console.log('⚠️ Aucun prix trouvé, ajout d\'une ligne par défaut');
-      allPrices['3g'] = undefined;
-    }
+    // Ne PAS ajouter de ligne par défaut
     
     const result = Object.entries(allPrices);
     console.log('🔍 getAllPriceEntries résultat final:', result);
@@ -1162,14 +1158,14 @@ export default function ProductsManager() {
                 </div>
                 
                 <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {getAllPriceEntries().filter(([_, value]) => value !== undefined).length === 0 ? (
+                  {getAllPriceEntries().length === 0 ? (
                     <div className="text-center py-8 text-gray-400">
                       <p className="mb-2">Aucun prix défini</p>
                       <p className="text-sm">Utilisez les boutons de quantité ci-dessus ou</p>
                       <p className="text-sm">cliquez sur "➕ Ajouter" pour une quantité personnalisée</p>
                     </div>
                   ) : (
-                    getAllPriceEntries().filter(([_, value]) => value !== undefined).map(([priceKey, value]) => (
+                    getAllPriceEntries().map(([priceKey, value]) => (
                     <div key={priceKey} className="flex items-center gap-3">
                       <div className="flex-1">
                         <label className="block text-xs text-gray-400 mb-1">Quantité</label>
@@ -1358,15 +1354,15 @@ export default function ProductsManager() {
                       </div>
                     </div>
                     
-                    <div className="space-y-3 max-h-80 overflow-y-auto">
-                                              {getAllPriceEntries().filter(([_, value]) => value !== undefined).length === 0 ? (
+                                          <div className="space-y-3 max-h-80 overflow-y-auto">
+                        {getAllPriceEntries().length === 0 ? (
                           <div className="text-center py-8 text-gray-400">
                             <p className="mb-2">Aucun prix défini</p>
                             <p className="text-sm">Utilisez les boutons de quantité ci-dessus ou</p>
                             <p className="text-sm">cliquez sur "➕ Ajouter" pour une quantité personnalisée</p>
                           </div>
                         ) : (
-                        getAllPriceEntries().filter(([_, value]) => value !== undefined).map(([priceKey, value]) => (
+                          getAllPriceEntries().map(([priceKey, value]) => (
                         <div key={priceKey} className="bg-gray-800/50 border border-white/10 rounded-lg p-3">
                           <div className="space-y-2">
                                                           <div>
