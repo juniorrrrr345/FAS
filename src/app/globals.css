@@ -121,6 +121,20 @@ body {
   animation: fade-in 1s ease-out forwards;
 }
 
+/* Animation rotation lente pour le chargement */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Metal+Mania&display=swap');
 

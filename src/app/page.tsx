@@ -224,14 +224,23 @@ export default function HomePage() {
         <div className="content-layer">
           <div className="min-h-screen flex items-center justify-center p-4">
             <div className="text-center bg-black/60 backdrop-blur-md rounded-3xl p-8 sm:p-12 max-w-lg mx-auto border border-white/20">
-              {/* Logo animé moderne */}
+              {/* Logo animé moderne avec image de fond */}
               <div className="mb-8">
                 <div className="relative w-40 h-40 mx-auto">
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full blur-2xl opacity-70 animate-pulse"></div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-full blur-xl opacity-50 animate-ping"></div>
-                  <div className="relative z-10 w-full h-full flex items-center justify-center">
-                    <span className="text-8xl animate-bounce filter drop-shadow-2xl">🛍️</span>
+                  {/* Cercle avec image de fond qui tourne */}
+                  <div className="absolute inset-0 rounded-full overflow-hidden animate-spin-slow border-4 border-white/20">
+                    <div 
+                      className="w-full h-full bg-cover bg-center opacity-80"
+                      style={{
+                        backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+                        backgroundColor: backgroundImage ? 'transparent' : 'rgba(255, 255, 255, 0.1)'
+                      }}
+                    />
                   </div>
+                  {/* Effet de brillance */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/20 to-transparent animate-pulse"></div>
+                  {/* Bordure animée */}
+                  <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-white/60 border-r-white/40 animate-spin"></div>
                 </div>
               </div>
               
