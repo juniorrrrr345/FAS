@@ -24,9 +24,21 @@ export default function HomePage() {
   
   // États pour les données - Initialiser avec des valeurs par défaut
   const [loading, setLoading] = useState(true); // Toujours true au départ
+  const [backgroundImage, setBackgroundImage] = useState<string>('');
   
   // Gérer la logique de première visite côté client uniquement
   useEffect(() => {
+    // Charger l'image de fond depuis localStorage si elle existe
+    const savedSettings = localStorage.getItem('shopSettings');
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings);
+        if (settings.backgroundImage) {
+          setBackgroundImage(settings.backgroundImage);
+        }
+      } catch (e) {}
+    }
+    
     // Vérifier si c'est la première visite
     const hasVisited = sessionStorage.getItem('hasVisited');
     if (hasVisited) {
@@ -49,6 +61,11 @@ export default function HomePage() {
           
           // Sauvegarder dans localStorage pour les prochaines visites
           localStorage.setItem('shopSettings', JSON.stringify(settings));
+          
+          // Sauvegarder l'image de fond pour le chargement
+          if (settings.backgroundImage) {
+            setBackgroundImage(settings.backgroundImage);
+          }
           
           // Appliquer le thème immédiatement
           if (settings.backgroundImage) {
