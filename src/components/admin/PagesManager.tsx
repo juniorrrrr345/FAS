@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface PageContent {
   slug: string;
@@ -17,6 +17,8 @@ export default function PagesManager() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [hasChanges, setHasChanges] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Charger les pages
   const loadPages = async () => {
@@ -74,10 +76,10 @@ export default function PagesManager() {
   };
 
   // Sauvegarder
-  const savePage = async () => {
+  const savePage = async (showStatus = true) => {
     try {
       setIsSaving(true);
-      setSaveStatus('Sauvegarde en cours...');
+      if (showStatus) setSaveStatus('Sauvegarde en cours...');
       
       const page = pageContent[activeTab];
       
@@ -96,7 +98,11 @@ export default function PagesManager() {
       const result = await response.json();
       
       if (result.success) {
-        setSaveStatus('✅ Sauvegardé avec succès !');
+        setHasChanges(false);
+        if (showStatus) {
+          setSaveStatus('✅ Sauvegardé avec succès !');
+          setTimeout(() => setSaveStatus(''), 3000);
+        }
         
         // Invalider le cache pour forcer le rechargement
         try {
@@ -105,7 +111,11 @@ export default function PagesManager() {
           console.log('Cache invalidation skipped');
         }
         
-        setTimeout(() => setSaveStatus(''), 3000);
+        // Mettre à jour le localStorage pour synchronisation immédiate
+        localStorage.setItem(`${activeTab}Page`, JSON.stringify({
+          title: page.title,
+          content: page.content
+        }));
       } else {
         setSaveStatus(`❌ Erreur: ${result.error || 'Erreur inconnue'}`);
         setTimeout(() => setSaveStatus(''), 5000);
@@ -119,13 +129,29 @@ export default function PagesManager() {
     }
   };
 
-  // Mettre à jour contenu
-  const updateContent = (field: 'title' | 'content', value: string) => {
+  // Sauvegarde automatique après 2 secondes d'inactivité
+  const handleContentChange = (field: 'title' | 'content', value: string) => {
     setPageContent(prev => ({
       ...prev,
-      [activeTab]: { ...prev[activeTab], [field]: value }
+      [activeTab]: {
+        ...prev[activeTab],
+        [field]: value
+      }
     }));
+    setHasChanges(true);
+
+    // Annuler le timeout précédent
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Programmer une nouvelle sauvegarde
+    saveTimeoutRef.current = setTimeout(() => {
+      savePage(false);
+    }, 2000);
   };
+
+
 
   useEffect(() => {
     loadPages();
@@ -141,6 +167,15 @@ export default function PagesManager() {
     }, 10000); // 10 secondes max
     
     return () => clearTimeout(timeout);
+  }, []);
+
+  // Nettoyer le timeout de sauvegarde au démontage
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
   }, []);
 
   const currentPage = pageContent[activeTab];
@@ -187,7 +222,7 @@ export default function PagesManager() {
           <input
             type="text"
             value={currentPage.title}
-            onChange={(e) => updateContent('title', e.target.value)}
+            onChange={(e) => handleContentChange('title', e.target.value)}
             className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white focus:border-white/40 focus:outline-none transition-colors"
             placeholder="Titre de la page"
           />
@@ -202,7 +237,7 @@ export default function PagesManager() {
           </div>
           <textarea
             value={currentPage.content}
-            onChange={(e) => updateContent('content', e.target.value)}
+            onChange={(e) => handleContentChange('content', e.target.value)}
             rows={15}
             className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white font-mono text-sm focus:border-white/40 focus:outline-none transition-colors"
             placeholder="Contenu de la page..."
@@ -211,7 +246,7 @@ export default function PagesManager() {
 
         {/* Status et Actions */}
         <div className="flex items-center justify-between pt-4">
-          <div>
+          <div className="flex items-center gap-3">
             {saveStatus && (
               <span className={`text-sm ${
                 saveStatus.includes('✅') ? 'text-green-400' : 
@@ -219,6 +254,16 @@ export default function PagesManager() {
                 'text-yellow-400'
               }`}>
                 {saveStatus}
+              </span>
+            )}
+            {hasChanges && !isSaving && (
+              <span className="text-xs text-gray-400">
+                Sauvegarde automatique dans 2s...
+              </span>
+            )}
+            {isSaving && !saveStatus && (
+              <span className="text-xs text-yellow-400">
+                Sauvegarde en cours...
               </span>
             )}
           </div>
@@ -230,11 +275,11 @@ export default function PagesManager() {
               🔄 Actualiser
             </button>
             <button
-              onClick={savePage}
-              disabled={isSaving}
+              onClick={() => savePage(true)}
+              disabled={isSaving || !hasChanges}
               className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSaving ? '💾 Sauvegarde...' : '💾 Sauvegarder'}
+                              {isSaving ? '💾 Sauvegarde...' : hasChanges ? '💾 Sauvegarder maintenant' : '✅ Sauvegardé'}
             </button>
           </div>
         </div>

@@ -14,23 +14,89 @@ export async function GET(
     const page = await pagesCollection.findOne({ slug: params.slug });
     console.log('📄 Page trouvée:', page ? 'OUI' : 'NON');
     
-    // Si la page n'existe pas, créer une page vide
+    // Si la page n'existe pas, créer une page par défaut
     if (!page) {
-      const defaultPage = {
-        slug: params.slug,
-        title: params.slug === 'info' ? 'À propos' : 'Contact',
-        content: '',
-        createdAt: new Date(),
-        updatedAt: new Date()
+      const defaultPages: { [key: string]: { title: string; content: string } } = {
+        info: {
+          title: 'À propos de FAS Boutique',
+          content: `# Bienvenue chez FAS Boutique 🛍️
+
+**FAS Boutique** est votre destination privilégiée pour des produits de qualité exceptionnelle. Nous nous engageons à vous offrir une expérience d'achat unique avec :
+
+## 🌟 Nos Engagements
+
+- **Qualité Premium** : Tous nos produits sont soigneusement sélectionnés
+- **Service Client** : Une équipe dédiée à votre satisfaction
+- **Livraison Rapide** : Vos commandes livrées dans les meilleurs délais
+- **Prix Compétitifs** : Le meilleur rapport qualité-prix
+
+## 🚀 Notre Mission
+
+Chez FAS Boutique, nous croyons que chaque client mérite le meilleur. C'est pourquoi nous travaillons sans relâche pour vous proposer des produits qui allient qualité, style et innovation.
+
+## 💎 Pourquoi Nous Choisir ?
+
+- **Authenticité garantie** : 100% de produits authentiques
+- **Satisfaction client** : Plus de 98% de clients satisfaits
+- **Support 24/7** : Nous sommes toujours là pour vous
+- **Paiement sécurisé** : Vos transactions sont protégées
+
+---
+
+*FAS Boutique - Votre satisfaction, notre priorité* ✨`
+        },
+        contact: {
+          title: 'Contactez FAS Boutique',
+          content: `# Contactez-nous 📞
+
+Nous sommes là pour répondre à toutes vos questions !
+
+## 📱 Nos Coordonnées
+
+**Téléphone** : +33 X XX XX XX XX  
+**Email** : contact@fas-boutique.com  
+**WhatsApp** : +33 X XX XX XX XX
+
+## 🕐 Horaires
+
+**Lundi - Vendredi** : 9h00 - 19h00  
+**Samedi** : 10h00 - 18h00  
+**Dimanche** : Fermé
+
+## 📍 Zone de Livraison
+
+Nous livrons dans toute la France métropolitaine :
+- Paris et région parisienne : 24-48h
+- Autres régions : 48-72h
+- Livraison express disponible
+
+## 💬 Réseaux Sociaux
+
+Suivez-nous sur nos réseaux sociaux pour ne rien manquer de nos nouveautés et promotions !
+
+---
+
+*N'hésitez pas à nous contacter, nous sommes là pour vous !* 💌`
+        }
       };
-      
-      await pagesCollection.insertOne(defaultPage);
-      console.log('✅ Page vide créée:', params.slug);
-      
-      return NextResponse.json({
-        content: defaultPage.content,
-        title: defaultPage.title
-      });
+
+      if (defaultPages[params.slug]) {
+        // Créer la page par défaut
+        const defaultPage = {
+          slug: params.slug,
+          ...defaultPages[params.slug],
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        
+        await pagesCollection.insertOne(defaultPage);
+        console.log('✅ Page par défaut créée:', params.slug);
+        
+        return NextResponse.json({
+          content: defaultPage.content,
+          title: defaultPage.title
+        });
+      }
     }
     
     return NextResponse.json({

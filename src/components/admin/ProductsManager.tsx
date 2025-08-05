@@ -664,7 +664,7 @@ export default function ProductsManager() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-white">🛍️ Gestion des Produits</h1>
-            <p className="text-gray-400 mt-2">Gérez votre catalogue de produits HashBurger</p>
+            <p className="text-gray-400 mt-2">Gérez votre catalogue de produits FAS Boutique</p>
           </div>
                   <div className="flex flex-col sm:flex-row gap-3">
           <button

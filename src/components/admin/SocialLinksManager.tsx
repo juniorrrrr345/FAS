@@ -25,17 +25,46 @@ export default function SocialLinksManager() {
 
   useEffect(() => {
     loadSocialLinks();
+
+    // Écouter les changements dans d'autres onglets
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'socialLinks' && e.newValue) {
+        setSocialLinks(JSON.parse(e.newValue));
+      }
+    };
+
+    // Écouter les mises à jour custom
+    const handleSocialLinksUpdate = (e: CustomEvent) => {
+      if (e.detail) {
+        setSocialLinks(e.detail);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('socialLinksUpdated' as any, handleSocialLinksUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('socialLinksUpdated' as any, handleSocialLinksUpdate);
+    };
   }, []);
 
   const loadSocialLinks = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/social-links');
+      const response = await fetch('/api/social-links', {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setSocialLinks(data);
         // Sauvegarder dans localStorage pour chargement instantané
         localStorage.setItem('socialLinks', JSON.stringify(data));
+        // Notifier les autres onglets/fenêtres
+        window.dispatchEvent(new CustomEvent('socialLinksUpdated', { detail: data }));
       }
     } catch (error) {
       console.error('Erreur chargement liens sociaux:', error);
@@ -140,6 +169,14 @@ export default function SocialLinksManager() {
           setTimeout(() => {
             successMsg.remove();
           }, 3000);
+
+          // Invalider le cache et recharger
+          try {
+            await fetch('/api/cache/invalidate', { method: 'POST' });
+          } catch (e) {}
+          
+          // Recharger pour synchroniser
+          loadSocialLinks();
         } else {
           // Restaurer en cas d'erreur
           setSocialLinks(originalLinks);

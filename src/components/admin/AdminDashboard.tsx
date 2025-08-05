@@ -6,13 +6,11 @@ import FarmsManager from './FarmsManager';
 import SocialLinksManager from './SocialLinksManager';
 import SettingsManager from './SettingsManager';
 import PagesManager from './PagesManager';
-import OrdersManager from './OrdersManager';
-
 interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type SectionType = 'products' | 'categories' | 'farms' | 'settings' | 'pages' | 'social' | 'orders';
+type SectionType = 'products' | 'categories' | 'farms' | 'settings' | 'pages' | 'social';
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeSection, setActiveSection] = useState<SectionType>('products');
@@ -22,7 +20,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'products' as SectionType, label: 'Produits', icon: '🛍️' },
     { id: 'categories' as SectionType, label: 'Catégories', icon: '🏷️' },
     { id: 'farms' as SectionType, label: 'Farms', icon: '🏭' },
-    { id: 'orders' as SectionType, label: 'Commandes', icon: '📋' },
     { id: 'settings' as SectionType, label: 'Configuration', icon: '⚙️' },
     { id: 'pages' as SectionType, label: 'Pages', icon: '📄' },
     { id: 'social' as SectionType, label: 'Réseaux sociaux', icon: '🌐' },
@@ -42,8 +39,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         return <PagesManager />;
       case 'social':
         return <SocialLinksManager />;
-      case 'orders':
-        return <OrdersManager />;
       default:
         return <ProductsManager />;
     }
@@ -53,10 +48,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     <div className="min-h-screen bg-black text-white">
       {/* Desktop: Sidebar + Content */}
       <div className="hidden lg:flex">
-        {/* Sidebar Desktop avec style JBEL INDUSTRY */}
+        {/* Sidebar Desktop avec style FAS Boutique */}
         <aside className="w-72 bg-black/90 backdrop-blur-sm border-r border-white/20 min-h-screen fixed left-0 top-0 z-50">
           <div className="p-6 border-b border-white/20">
-            <h1 className="text-2xl font-black text-white tracking-wider">JBEL INDUSTRY</h1>
+            <h1 className="text-2xl font-black text-white tracking-wider">FAS BOUTIQUE</h1>
             <p className="text-gray-400 text-xs mt-1 uppercase tracking-[0.2em] font-medium">Panel Admin</p>
           </div>
           <nav className="p-4">
@@ -104,7 +99,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-sm border-b border-white/20">
             <div className="flex items-center justify-between p-4">
               <div>
-                <h1 className="text-lg font-black text-white tracking-wider">JBEL INDUSTRY</h1>
+                <h1 className="text-lg font-black text-white tracking-wider">FAS BOUTIQUE</h1>
                 <p className="text-gray-400 text-xs uppercase tracking-[0.2em] font-medium">Panel Admin</p>
               </div>
               <button
@@ -181,7 +176,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         <div className="hidden sm:flex lg:hidden h-screen">
           <aside className="w-64 bg-black/90 backdrop-blur-sm border-r border-white/20 min-h-screen overflow-y-auto">
             <div className="p-4 border-b border-white/20">
-              <h1 className="text-lg font-black text-white tracking-wider">JBEL INDUSTRY</h1>
+              <h1 className="text-lg font-black text-white tracking-wider">FAS BOUTIQUE</h1>
               <p className="text-gray-400 text-xs mt-1 uppercase tracking-[0.2em] font-medium">Panel Admin</p>
             </div>
             <nav className="p-3">

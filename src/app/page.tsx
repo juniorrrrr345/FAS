@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
-// Redéploiement forcé - Nouveau chargement JBEL INDUSTRY
+// Redéploiement forcé - Nouveau chargement FAS Boutique
 import CategoryFilter from '../components/CategoryFilter';
 import ProductCard, { Product } from '../components/ProductCard';
 import ProductDetail from '../components/ProductDetail';
@@ -261,7 +261,7 @@ export default function HomePage() {
               
               {/* Footer */}
               <div className="text-white text-sm font-medium drop-shadow-md">
-                <p>© 2025 JUNIOR X JBEL</p>
+                <p>© 2025 FAS Boutique</p>
               </div>
             </div>
           </div>
