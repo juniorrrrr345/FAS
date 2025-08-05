@@ -230,7 +230,7 @@ export default function HomePage() {
                   <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full blur-2xl opacity-70 animate-pulse"></div>
                   <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-full blur-xl opacity-50 animate-ping"></div>
                   <div className="relative z-10 w-full h-full flex items-center justify-center">
-                    <span className="text-8xl animate-bounce filter drop-shadow-2xl">🔥</span>
+                    <span className="text-8xl animate-bounce filter drop-shadow-2xl">🛍️</span>
                   </div>
                 </div>
               </div>

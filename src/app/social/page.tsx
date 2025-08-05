@@ -1,7 +1,8 @@
-import Link from 'next/link';
+'use client';
+
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
-import { connectToDatabase } from '@/lib/mongodb-fixed';
 
 interface SocialLink {
   _id: string;
@@ -12,131 +13,168 @@ interface SocialLink {
   isActive: boolean;
 }
 
-interface Settings {
-  shopTitle: string;
-  shopSubtitle: string;
-  email: string;
-  address: string;
-  whatsappLink: string;
-}
+export default function SocialPage() {
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [shopTitle, setShopTitle] = useState('FAS Boutique');
 
-async function getSocialData() {
-  try {
-    const { db } = await connectToDatabase();
-    
-    const [socialLinks, settings] = await Promise.all([
-      db.collection('socialLinks').find({ isActive: true }).toArray(),
-      db.collection('settings').findOne({})
-    ]);
-    
-    return {
-      socialLinks: socialLinks as SocialLink[],
-      settings: settings as Settings | null
+  useEffect(() => {
+    loadData();
+
+    // Écouter les changements dans localStorage
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'socialLinks' && e.newValue) {
+        setSocialLinks(JSON.parse(e.newValue));
+      } else if (e.key === 'shopSettings' && e.newValue) {
+        const settings = JSON.parse(e.newValue);
+        setShopTitle(settings.shopTitle || 'FAS Boutique');
+      }
     };
-  } catch (error) {
-    console.error('Erreur chargement social:', error);
-    return {
-      socialLinks: [],
-      settings: null
+
+    // Écouter les invalidations de cache
+    const handleCacheInvalidation = () => {
+      loadData();
     };
-  }
-}
 
-export default async function SocialPage() {
-  // Charger les données côté serveur
-  const { socialLinks, settings } = await getSocialData();
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('cacheInvalidated', handleCacheInvalidation);
+    window.addEventListener('socialLinksUpdated', loadData);
 
-  // Structure cohérente avec la boutique principale
+    // Recharger périodiquement
+    const interval = setInterval(loadData, 30000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('cacheInvalidated', handleCacheInvalidation);
+      window.removeEventListener('socialLinksUpdated', loadData);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const loadData = async () => {
+    try {
+      // Charger depuis localStorage d'abord
+      const cachedLinks = localStorage.getItem('socialLinks');
+      if (cachedLinks) {
+        setSocialLinks(JSON.parse(cachedLinks));
+      }
+
+      const cachedSettings = localStorage.getItem('shopSettings');
+      if (cachedSettings) {
+        const settings = JSON.parse(cachedSettings);
+        setShopTitle(settings.shopTitle || 'FAS Boutique');
+      }
+
+      // Puis charger depuis l'API
+      const [linksRes, settingsRes] = await Promise.all([
+        fetch('/api/social-links', {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        }),
+        fetch('/api/settings', {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        })
+      ]);
+
+      if (linksRes.ok) {
+        const links = await linksRes.json();
+        setSocialLinks(links.filter((link: SocialLink) => link.isActive));
+        localStorage.setItem('socialLinks', JSON.stringify(links));
+      }
+
+      if (settingsRes.ok) {
+        const settings = await settingsRes.json();
+        setShopTitle(settings.shopTitle || 'FAS Boutique');
+      }
+    } catch (error) {
+      console.error('Erreur chargement réseaux sociaux:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="main-container">
-      {/* Overlay global toujours présent */}
       <div className="global-overlay"></div>
       
-      {/* Contenu principal */}
       <div className="content-layer">
         <Header />
-        
         <div className="pt-12 sm:pt-14">
           <div className="h-4 sm:h-6"></div>
           
-          <main className="pt-4 pb-24 sm:pb-28 px-3 sm:px-4 lg:px-6 xl:px-8 max-w-7xl mx-auto">
-            {/* Titre de la page avec style boutique */}
-            <div className="text-center mb-8 sm:mb-12">
-              <h1 className="shop-title text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3">
-                Nos Réseaux
+          <div className="container mx-auto px-4 py-8 max-w-4xl">
+            {/* Titre de la page */}
+            <div className="text-center mb-12">
+              <h1 className="shop-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4">
+                Nos Réseaux Sociaux
               </h1>
-              <div className="w-20 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mb-4"></div>
-              <p className="text-white text-base sm:text-lg max-w-xl mx-auto px-4 font-semibold bg-black/50 backdrop-blur-sm py-2 px-4 rounded-lg">
-                Rejoignez <span className="text-yellow-400">{settings?.shopTitle || 'notre boutique'}</span> sur nos réseaux sociaux
+              <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mb-6"></div>
+              <p className="text-gray-300 text-lg">
+                Rejoignez <span className="text-yellow-400">{shopTitle}</span> sur nos réseaux sociaux
               </p>
             </div>
 
-            {socialLinks.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {/* Grille des réseaux sociaux */}
+            {loading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+              </div>
+            ) : socialLinks.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {socialLinks.map((link) => (
                   <a
                     key={link._id}
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group relative overflow-hidden rounded-xl transition-all duration-300 transform hover:scale-105 bg-gray-900/50 backdrop-blur-sm border border-white/10 hover:border-white/20"
+                    className="group relative bg-black/40 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/30 transition-all duration-300 transform hover:scale-105"
+                    style={{
+                      borderColor: `${link.color}40`,
+                    }}
                   >
-                    {/* Effet de hover */}
+                    {/* Fond coloré au hover */}
                     <div 
-                      className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                      style={{
-                        background: `linear-gradient(135deg, ${link.color}, transparent)`
-                      }}
+                      className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-10 transition-opacity duration-300"
+                      style={{ backgroundColor: link.color }}
                     />
                     
-                    <div className="relative p-4 sm:p-6 text-center">
-                      {/* Icône */}
-                      <div className="text-2xl sm:text-3xl mb-2">{link.icon}</div>
-                      
-                      {/* Nom du réseau */}
-                      <h3 className="text-sm sm:text-base font-semibold text-white mb-2 truncate">
+                    {/* Contenu */}
+                    <div className="relative z-10 flex flex-col items-center text-center">
+                      <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                        {link.icon}
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-2">
                         {link.name}
                       </h3>
-                      
-                      {/* Petit indicateur de couleur */}
                       <div 
-                        className="w-8 h-1 mx-auto rounded-full"
-                        style={{ backgroundColor: link.color }}
-                      />
+                        className="text-sm font-medium px-4 py-1 rounded-full"
+                        style={{
+                          backgroundColor: `${link.color}20`,
+                          color: link.color,
+                          borderWidth: '1px',
+                          borderColor: `${link.color}40`
+                        }}
+                      >
+                        Suivre →
+                      </div>
                     </div>
                   </a>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16">
-                <p className="text-gray-400">
-                  Aucun réseau social configuré pour le moment.
-                </p>
+              <div className="text-center text-gray-500 py-12">
+                <p className="text-lg">Aucun réseau social disponible pour le moment</p>
               </div>
             )}
-
-            {/* Section contact plus visible */}
-            {settings?.whatsappLink && (
-              <div className="mt-12 sm:mt-16 text-center">
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-6">
-                  <span className="text-2xl">💬</span> Besoin d&apos;aide ?
-                </h2>
-                <a
-                  href={settings.whatsappLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-3 bg-green-600 hover:bg-green-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-bold transition-all duration-200 transform hover:scale-105 shadow-lg"
-                >
-                  <span className="text-xl sm:text-2xl">💬</span>
-                  <span>Contactez-nous sur WhatsApp</span>
-                </a>
-              </div>
-            )}
-          </main>
+          </div>
         </div>
       </div>
       
-      {/* BottomNav toujours visible */}
       <BottomNav />
     </div>
   );
