@@ -83,6 +83,14 @@ export default function PagesManager() {
       
       const page = pageContent[activeTab];
       
+      // Calculer la taille approximative du contenu
+      const contentSize = new TextEncoder().encode(JSON.stringify({
+        title: page.title,
+        content: page.content
+      })).length;
+      
+      console.log(`📏 Taille du contenu à sauvegarder: ${(contentSize / 1024).toFixed(2)} KB`);
+      
       const response = await fetch(`/api/pages/${activeTab}`, {
         method: 'POST',
         headers: { 
@@ -97,10 +105,11 @@ export default function PagesManager() {
       
       const result = await response.json();
       
-      if (result.success) {
+      if (response.ok && result.success) {
         setHasChanges(false);
         if (showStatus) {
-          setSaveStatus('✅ Sauvegardé avec succès !');
+          const sizeInfo = result.size ? ` (${result.size})` : '';
+          setSaveStatus(`✅ Sauvegardé avec succès !${sizeInfo}`);
           setTimeout(() => setSaveStatus(''), 3000);
         }
         
@@ -117,12 +126,18 @@ export default function PagesManager() {
           content: page.content
         }));
       } else {
-        setSaveStatus(`❌ Erreur: ${result.error || 'Erreur inconnue'}`);
+        // Gestion des erreurs spécifiques
+        if (response.status === 413) {
+          setSaveStatus(`❌ ${result.error || 'Contenu trop volumineux'}`);
+          console.error('Contenu trop volumineux:', contentSize / 1024 / 1024, 'MB');
+        } else {
+          setSaveStatus(`❌ Erreur: ${result.error || 'Erreur inconnue'}`);
+        }
         setTimeout(() => setSaveStatus(''), 5000);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erreur sauvegarde:', error);
-      setSaveStatus(`❌ Erreur: ${error.message || 'Erreur de connexion'}`);
+      setSaveStatus('❌ Erreur de connexion');
       setTimeout(() => setSaveStatus(''), 5000);
     } finally {
       setIsSaving(false);
@@ -140,17 +155,33 @@ export default function PagesManager() {
     }));
     setHasChanges(true);
 
-    // Annuler le timeout précédent
+    // Annuler la sauvegarde automatique précédente
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Programmer une nouvelle sauvegarde
+    // Programmer une nouvelle sauvegarde automatique
     saveTimeoutRef.current = setTimeout(() => {
       savePage(false);
     }, 2000);
   };
 
+  // Calculer la taille du contenu actuel
+  const getContentSize = () => {
+    const page = pageContent[activeTab];
+    const size = new TextEncoder().encode(JSON.stringify({
+      title: page.title,
+      content: page.content
+    })).length;
+    
+    if (size < 1024) {
+      return `${size} B`;
+    } else if (size < 1024 * 1024) {
+      return `${(size / 1024).toFixed(1)} KB`;
+    } else {
+      return `${(size / 1024 / 1024).toFixed(2)} MB`;
+    }
+  };
 
 
   useEffect(() => {
@@ -215,73 +246,74 @@ export default function PagesManager() {
         </button>
       </div>
 
-      {/* Formulaire */}
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-white mb-2">Titre</label>
+      {/* Contenu principal */}
+      <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-white/10">
+        {/* Titre de la page */}
+        <div className="mb-4">
+          <label className="block text-gray-400 text-sm font-medium mb-2">
+            Titre de la page
+          </label>
           <input
             type="text"
-            value={currentPage.title}
+            value={pageContent[activeTab].title}
             onChange={(e) => handleContentChange('title', e.target.value)}
-            className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white focus:border-white/40 focus:outline-none transition-colors"
+            className="w-full px-4 py-3 bg-black/50 text-white rounded-xl border border-white/10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
             placeholder="Titre de la page"
           />
         </div>
 
+        {/* Contenu de la page */}
         <div>
-          <label className="block text-sm font-medium text-white mb-2">
-            Contenu (Markdown supporté)
-          </label>
-          <div className="text-xs text-gray-400 mb-2">
-            Utilisez # pour les titres, ** pour le gras, * pour l'italique, - pour les listes
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-gray-400 text-sm font-medium">
+              Contenu (Markdown supporté)
+            </label>
+            <span className="text-xs text-gray-500">
+              Taille: {getContentSize()}
+            </span>
           </div>
           <textarea
-            value={currentPage.content}
+            value={pageContent[activeTab].content}
             onChange={(e) => handleContentChange('content', e.target.value)}
+            className="w-full px-4 py-3 bg-black/50 text-white rounded-xl border border-white/10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono text-sm"
             rows={15}
-            className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white font-mono text-sm focus:border-white/40 focus:outline-none transition-colors"
-            placeholder="Contenu de la page..."
+            placeholder={`Contenu de la page ${activeTab}...`}
           />
+          <p className="text-xs text-gray-500 mt-2">
+            💡 Utilisez **texte** pour du gras, *texte* pour de l'italique, # pour les titres
+          </p>
         </div>
 
-        {/* Status et Actions */}
-        <div className="flex items-center justify-between pt-4">
-          <div className="flex items-center gap-3">
-            {saveStatus && (
-              <span className={`text-sm ${
-                saveStatus.includes('✅') ? 'text-green-400' : 
-                saveStatus.includes('❌') ? 'text-red-400' : 
-                'text-yellow-400'
-              }`}>
-                {saveStatus}
-              </span>
-            )}
-            {hasChanges && !isSaving && (
-              <span className="text-xs text-gray-400">
-                Sauvegarde automatique dans 2s...
-              </span>
-            )}
-            {isSaving && !saveStatus && (
-              <span className="text-xs text-yellow-400">
-                Sauvegarde en cours...
-              </span>
-            )}
-          </div>
-          <div className="flex space-x-3">
-            <button
-              onClick={loadPages}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors"
-            >
-              🔄 Actualiser
-            </button>
-            <button
-              onClick={() => savePage(true)}
-              disabled={isSaving || !hasChanges}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-                              {isSaving ? '💾 Sauvegarde...' : hasChanges ? '💾 Sauvegarder maintenant' : '✅ Sauvegardé'}
-            </button>
-          </div>
+        {/* Actions */}
+        <div className="flex items-center gap-3 mt-6">
+          <button
+            onClick={() => savePage(true)}
+            disabled={isSaving || !hasChanges}
+            className={`px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 ${
+              isSaving || !hasChanges
+                ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/25 hover:scale-105 active:scale-95'
+            }`}
+          >
+            {isSaving ? '💾 Sauvegarde...' : hasChanges ? '💾 Sauvegarder maintenant' : '✅ Sauvegardé'}
+          </button>
+          {hasChanges && !isSaving && (
+            <span className="text-xs text-gray-400">
+              Sauvegarde automatique dans 2s...
+            </span>
+          )}
+          {isSaving && !saveStatus && (
+            <span className="text-xs text-yellow-400">
+              Sauvegarde en cours...
+            </span>
+          )}
+          {saveStatus && (
+            <span className={`text-sm font-medium ${
+              saveStatus.includes('✅') ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {saveStatus}
+            </span>
+          )}
         </div>
       </div>
     </div>

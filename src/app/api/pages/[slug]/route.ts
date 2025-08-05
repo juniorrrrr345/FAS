@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb-fixed';
 
+// Configuration Next.js pour augmenter les limites
+export const maxDuration = 60; // 60 secondes timeout
+export const runtime = 'nodejs';
+
+// Configuration pour accepter des requêtes plus grandes (jusqu'à 10MB)
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { slug: string } }
@@ -120,17 +133,42 @@ export async function POST(
   try {
     console.log('📝 API Pages POST - Slug:', params.slug);
     
-    const { content, title } = await request.json();
+    // Vérifier la taille de la requête
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Le contenu est trop volumineux (limite: 10MB)' 
+      }, { status: 413 });
+    }
+    
+    const body = await request.json();
+    const { content, title } = body;
+    
+    // Vérifier que le contenu n'est pas trop grand pour MongoDB (limite 16MB par document)
+    const contentSize = new TextEncoder().encode(JSON.stringify(body)).length;
+    console.log(`📏 Taille du contenu: ${(contentSize / 1024).toFixed(2)} KB`);
+    
+    if (contentSize > 15 * 1024 * 1024) { // 15MB de sécurité
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Le contenu est trop volumineux pour la base de données (limite: 15MB)' 
+      }, { status: 413 });
+    }
+    
     const { db } = await connectToDatabase();
     const pagesCollection = db.collection('pages');
     
-    const result = await pagesCollection.replaceOne(
+    // Utiliser updateOne avec upsert au lieu de replaceOne pour une meilleure gestion
+    const result = await pagesCollection.updateOne(
       { slug: params.slug },
       { 
-        slug: params.slug, 
-        title: title || params.slug, 
-        content: content || '', 
-        updatedAt: new Date() 
+        $set: {
+          slug: params.slug, 
+          title: title || params.slug, 
+          content: content || '', 
+          updatedAt: new Date()
+        }
       },
       { upsert: true }
     );
@@ -138,12 +176,35 @@ export async function POST(
     console.log('✅ Page sauvegardée:', {
       slug: params.slug,
       modified: result.modifiedCount,
-      upserted: result.upsertedCount
+      upserted: result.upsertedCount,
+      contentLength: `${(contentSize / 1024).toFixed(2)} KB`
     });
     
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      size: `${(contentSize / 1024).toFixed(2)} KB`
+    });
   } catch (error) {
     console.error('❌ Erreur API Pages POST:', error);
+    
+    // Gestion spécifique des erreurs de taille
+    if (error instanceof Error) {
+      if (error.message.includes('PayloadTooLargeError') || 
+          error.message.includes('request entity too large')) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Le contenu est trop volumineux. Veuillez réduire la taille du texte.' 
+        }, { status: 413 });
+      }
+      
+      if (error.message.includes('document exceeds maximum allowed BSON object size')) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Le document dépasse la taille maximale autorisée par MongoDB (16MB)' 
+        }, { status: 413 });
+      }
+    }
+    
     return NextResponse.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Erreur inconnue' 
