@@ -243,7 +243,7 @@ body {
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior-y: contain !important;
   touch-action: pan-y !important;
-  padding-bottom: 100px !important; /* Espace pour BottomNav */
+  padding-bottom: 120px !important; /* Espace pour BottomNav */
 }
 
 /* Prévention du scroll de body quand une page modal est ouverte */
@@ -605,6 +605,17 @@ body {
 /* Layer de contenu */
 .content-layer {
   @apply relative z-10;
+}
+
+/* Padding bottom pour les pages avec BottomNav */
+.pb-safe-bottom {
+  padding-bottom: 100px !important;
+}
+
+@media (max-width: 640px) {
+  .pb-safe-bottom {
+    padding-bottom: 80px !important;
+  }
 }
 
 /* Fond global au niveau du body et html */

@@ -75,14 +75,14 @@ export default function BottomNav() {
 
   return (
     <nav 
-      className="bottom-nav-container bg-black/80 backdrop-blur-sm border-t border-white/10 safe-area-padding"
+      className="bottom-nav-container bg-black/90 backdrop-blur-md border-t border-white/20 safe-area-padding"
     >
-      <div className="flex items-center justify-around py-1.5 sm:py-2 px-2 sm:px-4">
+      <div className="flex items-center justify-around py-1 sm:py-1.5 px-2 sm:px-4">
         {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => handleTabClick(item.id)}
-            className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg transition-all duration-200 touch-manipulation min-w-0 flex-1 max-w-[80px] ${
+            className={`flex flex-col items-center justify-center py-1 sm:py-1.5 px-2 sm:px-3 rounded-lg transition-all duration-200 touch-manipulation min-w-0 flex-1 max-w-[80px] ${
               activeTab === item.id
                 ? 'text-white bg-white/10 border border-white/20'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'

@@ -20,7 +20,7 @@ export default function ContactPage({ content }: ContactPageProps) {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl pb-safe-bottom">
       {/* Titre de la page avec style boutique */}
       <div className="text-center mb-8">
         <h1 className="shop-title text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3">

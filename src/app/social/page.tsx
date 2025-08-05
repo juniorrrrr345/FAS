@@ -107,7 +107,7 @@ export default function SocialPage() {
         <div className="pt-12 sm:pt-14">
           <div className="h-4 sm:h-6"></div>
           
-          <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="container mx-auto px-4 py-8 max-w-4xl pb-safe-bottom">
             {/* Titre de la page */}
             <div className="text-center mb-12">
               <h1 className="shop-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4">
