@@ -20,13 +20,6 @@ const nextConfig = {
       },
     ],
   },
-  // Augmenter les limites pour les requêtes API
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-    responseLimit: '10mb',
-  },
   // Configuration expérimentale pour des requêtes plus grandes
   experimental: {
     serverComponentsExternalPackages: ['mongoose'],

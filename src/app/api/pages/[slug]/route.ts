@@ -4,15 +4,7 @@ import { connectToDatabase } from '@/lib/mongodb-fixed';
 // Configuration Next.js pour augmenter les limites
 export const maxDuration = 60; // 60 secondes timeout
 export const runtime = 'nodejs';
-
-// Configuration pour accepter des requêtes plus grandes (jusqu'à 10MB)
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-};
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
