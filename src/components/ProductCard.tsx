@@ -5,6 +5,7 @@ interface Product {
   category: string;
   image: string;
   video?: string;
+  description?: string;
   prices: {
     "5g": number;
     "10g": number;
@@ -62,6 +63,9 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
         <p className="text-gray-400 text-xxs sm:text-xs font-medium uppercase tracking-widest break-words line-clamp-1">
           {product.farm}
         </p>
+        {product.description && (
+          <p className="text-gray-300 text-xxs sm:text-xs mt-1 line-clamp-2">{product.description}</p>
+        )}
       </div>
     </div>
   );

@@ -824,6 +824,13 @@ export default function ProductsManager() {
                 {product.farm}
               </p>
               
+              {/* Description */}
+              {product.description && (
+                <p className="text-gray-300 text-xs mb-2 line-clamp-2">
+                  {product.description}
+                </p>
+              )}
+              
               {/* Prix principaux */}
               <div className="mb-3">
                 <div className="grid grid-cols-2 gap-1 text-xs">
@@ -1091,12 +1098,15 @@ export default function ProductsManager() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+                    <span className="mr-2">📝</span>
+                    Description
+                  </label>
                   <textarea
                     value={formData.description || ''}
                     onChange={(e) => updateField('description', e.target.value)}
-                    className="w-full bg-gray-800 border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-white/50 h-20"
-                    placeholder="Description du produit..."
+                    className="w-full bg-gray-800 border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-white/50 h-32 resize-y"
+                    placeholder="Décrivez votre produit en détail... (qualité, effets, particularités...)"
                   />
                 </div>
 
@@ -1234,14 +1244,17 @@ export default function ProductsManager() {
                       </select>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
-                      <textarea
-                        value={formData.description || ''}
-                        onChange={(e) => updateField('description', e.target.value)}
-                        className="w-full bg-gray-800 border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-white/50 h-20"
-                        placeholder="Description du produit..."
-                      />
+                                    <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+                    <span className="mr-2">📝</span>
+                    Description
+                  </label>
+                  <textarea
+                    value={formData.description || ''}
+                    onChange={(e) => updateField('description', e.target.value)}
+                    className="w-full bg-gray-800 border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-white/50 h-32 resize-y"
+                    placeholder="Décrivez votre produit en détail... (qualité, effets, particularités...)"
+                  />
                     </div>
 
                     <div className="flex items-center">
