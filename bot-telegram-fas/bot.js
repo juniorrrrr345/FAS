@@ -988,6 +988,31 @@ bot.on('photo', async (msg) => {
 // Gestion des erreurs
 bot.on('polling_error', (error) => {
     console.error('Erreur de polling:', error);
+    // Ne pas arrêter le bot en cas d'erreur
+});
+
+// Gestion des erreurs non capturées
+process.on('uncaughtException', (error) => {
+    console.error('❌ Erreur non capturée:', error);
+    // Ne pas arrêter le processus
+});
+
+process.on('unhandledRejection', (error) => {
+    console.error('❌ Promesse rejetée non gérée:', error);
+    // Ne pas arrêter le processus
+});
+
+// Redémarrer le polling en cas d'erreur
+bot.on('error', (error) => {
+    console.error('❌ Erreur du bot:', error);
+    if (error.code === 'ETELEGRAM' && error.response && error.response.statusCode === 409) {
+        console.log('🔄 Conflit détecté, tentative de redémarrage du polling...');
+        bot.stopPolling();
+        setTimeout(() => {
+            bot.startPolling();
+            console.log('✅ Polling redémarré');
+        }, 5000);
+    }
 });
 
 console.log('🤖 Bot démarré avec succès!');
