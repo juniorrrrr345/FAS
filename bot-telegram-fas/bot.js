@@ -174,21 +174,11 @@ async function sendWelcomeMessage(chatId, editMessageId = null, userInfo = null)
         };
 
         if (config.welcomeImage) {
-            const imagePath = getImagePath(config.welcomeImage);
-            if (fs.existsSync(imagePath)) {
-                // Avec image, on doit envoyer un nouveau message
-                await sendNewPhoto(chatId, imagePath, {
-                    caption: personalizedMessage,
-                    ...options
-                });
-            } else {
-                // Sans image valide, utiliser du texte
-                if (editMessageId && activeMessages[chatId] === editMessageId) {
-                    await updateMessage(chatId, editMessageId, personalizedMessage, options);
-                } else {
-                    await sendNewMessage(chatId, personalizedMessage, options);
-                }
-            }
+            // Avec image (file_id Telegram), on doit envoyer un nouveau message
+            await sendNewPhoto(chatId, config.welcomeImage, {
+                caption: personalizedMessage,
+                ...options
+            });
         } else {
             // Sans image, on peut éditer ou envoyer un nouveau message
             if (editMessageId && activeMessages[chatId] === editMessageId) {
@@ -302,15 +292,10 @@ bot.on('callback_query', async (callbackQuery) => {
                 };
                 
                 if (config.welcomeImage) {
-                    const imagePath = getImagePath(config.welcomeImage);
-                    if (fs.existsSync(imagePath)) {
-                        await sendNewPhoto(chatId, imagePath, {
-                            caption: config.infoText,
-                            ...infoOptions
-                        });
-                    } else {
-                        await updateMessage(chatId, messageId, config.infoText, infoOptions);
-                    }
+                    await sendNewPhoto(chatId, config.welcomeImage, {
+                        caption: config.infoText,
+                        ...infoOptions
+                    });
                 } else {
                     await updateMessage(chatId, messageId, config.infoText, infoOptions);
                 }
@@ -944,41 +929,19 @@ bot.on('photo', async (msg) => {
         const photo = msg.photo[msg.photo.length - 1];
         const fileId = photo.file_id;
 
-        // Télécharger la photo
-        const file = await bot.getFile(fileId);
-        const filePath = file.file_path;
-        const downloadUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${filePath}`;
+        // Sauvegarder directement le file_id de Telegram
+        config.welcomeImage = fileId;
+        await saveConfig(config);
+        delete userStates[userId];
 
-        // Sauvegarder la photo
-        const fileName = `welcome_${Date.now()}.jpg`;
-        const localPath = path.join(IMAGES_DIR, fileName);
-
-        const https = require('https');
-        const fileStream = fs.createWriteStream(localPath);
-
-        https.get(downloadUrl, (response) => {
-            response.pipe(fileStream);
-            fileStream.on('finish', async () => {
-                fileStream.close();
-                
-                // Supprimer l'ancienne photo si elle existe
-                if (config.welcomeImage) {
-                    const oldPath = getImagePath(config.welcomeImage);
-                    if (fs.existsSync(oldPath)) {
-                        fs.unlinkSync(oldPath);
-                    }
-                }
-
-                // Mettre à jour la configuration
-                config.welcomeImage = fileName;
-                saveConfig(config);
-                delete userStates[userId];
-
-                await updateMessage(chatId, userState.messageId, '✅ Photo d\'accueil mise à jour!', {
-                    reply_markup: getAdminKeyboard()
-                });
+        await updateMessage(chatId, userState.messageId, '✅ Photo d\'accueil mise à jour!');
+        
+        // Retour automatique au menu après 2 secondes
+        setTimeout(async () => {
+            await updateMessage(chatId, userState.messageId, '🔧 Menu Administrateur', {
+                reply_markup: getAdminKeyboard()
             });
-        });
+        }, 2000);
     } catch (error) {
         console.error('Erreur lors du traitement de la photo:', error);
         await sendNewMessage(chatId, '❌ Une erreur s\'est produite lors du traitement de la photo.');
