@@ -72,11 +72,11 @@ function getSocialManageKeyboard() {
     return {
         inline_keyboard: [
             [
-                { text: '➕ Ajouter', callback_data: 'social_add' },
-                { text: '❌ Supprimer', callback_data: 'social_remove' }
+                { text: '➕ Ajouter', callback_data: 'admin_add_social' },
+                { text: '❌ Supprimer', callback_data: 'admin_remove_social' }
             ],
             [
-                { text: '📐 Disposition', callback_data: 'social_layout' }
+                { text: '📐 Disposition', callback_data: 'admin_social_layout' }
             ],
             [
                 { text: '🔙 Retour', callback_data: 'admin_menu' }

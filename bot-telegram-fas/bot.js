@@ -361,8 +361,21 @@ bot.on('callback_query', async (callbackQuery) => {
                 break;
 
             case 'admin_manage_social':
-                await updateMessage(chatId, messageId, '🌐 Gestion des réseaux sociaux', {
-                    reply_markup: getSocialManageKeyboard(config)
+                let socialMessage = '🌐 **Gestion des réseaux sociaux**\n\n';
+                
+                if (config.socialNetworks && config.socialNetworks.length > 0) {
+                    socialMessage += '📱 **Réseaux actuels:**\n';
+                    config.socialNetworks.forEach((social, index) => {
+                        socialMessage += `${index + 1}. ${social.name} - [${social.url}](${social.url})\n`;
+                    });
+                    socialMessage += `\n📐 **Disposition:** ${config.socialButtonsPerRow || 2} bouton(s) par ligne`;
+                } else {
+                    socialMessage += '_Aucun réseau social configuré_';
+                }
+                
+                await updateMessage(chatId, messageId, socialMessage, {
+                    parse_mode: 'Markdown',
+                    reply_markup: getSocialManageKeyboard()
                 });
                 break;
 
