@@ -422,6 +422,59 @@ bot.on('callback_query', async (callbackQuery) => {
                 });
                 break;
 
+            // Gestion des layouts 1-6
+            case 'layout_1':
+            case 'layout_2':
+            case 'layout_3':
+            case 'layout_4':
+            case 'layout_5':
+            case 'layout_6':
+                const buttonsPerRow = parseInt(data.replace('layout_', ''));
+                config.socialButtonsPerRow = buttonsPerRow;
+                await saveConfig(config);
+                await bot.answerCallbackQuery(callbackQuery.id, {
+                    text: `✅ Disposition mise à jour: ${buttonsPerRow} bouton(s) par ligne`,
+                    show_alert: true
+                });
+                // Retour au menu de gestion des réseaux sociaux
+                let socialMsg = '🌐 **Gestion des réseaux sociaux**\n\n';
+                if (config.socialNetworks && config.socialNetworks.length > 0) {
+                    socialMsg += '📱 **Réseaux actuels:**\n';
+                    config.socialNetworks.forEach((social, index) => {
+                        socialMsg += `${index + 1}. ${social.name} - [${social.url}](${social.url})\n`;
+                    });
+                    socialMsg += `\n📐 **Disposition:** ${config.socialButtonsPerRow || 2} bouton(s) par ligne`;
+                } else {
+                    socialMsg += '_Aucun réseau social configuré_';
+                }
+                await updateMessage(chatId, messageId, socialMsg, {
+                    parse_mode: 'Markdown',
+                    reply_markup: getSocialManageKeyboard()
+                });
+                break;
+
+            case 'admin_remove_social':
+                if (config.socialNetworks && config.socialNetworks.length > 0) {
+                    const removeKeyboard = {
+                        inline_keyboard: config.socialNetworks.map((social, index) => [
+                            { text: `❌ ${social.name}`, callback_data: `remove_social_${index}` }
+                        ])
+                    };
+                    removeKeyboard.inline_keyboard.push([
+                        { text: '🔙 Retour', callback_data: 'admin_manage_social' }
+                    ]);
+                    await updateMessage(chatId, messageId, '❌ **Supprimer un réseau social**\n\nSélectionnez le réseau à supprimer:', {
+                        parse_mode: 'Markdown',
+                        reply_markup: removeKeyboard
+                    });
+                } else {
+                    await bot.answerCallbackQuery(callbackQuery.id, {
+                        text: '❌ Aucun réseau social à supprimer',
+                        show_alert: true
+                    });
+                }
+                break;
+
             case 'admin_manage_admins':
                 const adminsList = await Promise.all(Array.from(admins).map(async (id) => {
                     try {
@@ -633,7 +686,35 @@ bot.on('callback_query', async (callbackQuery) => {
                         });
                     }
                 }
-                // Gestion de la disposition des boutons sociaux
+                // Gestion de la suppression des réseaux sociaux
+                else if (data.startsWith('remove_social_')) {
+                    const index = parseInt(data.replace('remove_social_', ''));
+                    if (config.socialNetworks && config.socialNetworks[index]) {
+                        const removedSocial = config.socialNetworks[index];
+                        config.socialNetworks.splice(index, 1);
+                        await saveConfig(config);
+                        await bot.answerCallbackQuery(callbackQuery.id, {
+                            text: `✅ ${removedSocial.name} supprimé!`,
+                            show_alert: true
+                        });
+                        // Retour au menu de gestion
+                        let socialMessage = '🌐 **Gestion des réseaux sociaux**\n\n';
+                        if (config.socialNetworks && config.socialNetworks.length > 0) {
+                            socialMessage += '📱 **Réseaux actuels:**\n';
+                            config.socialNetworks.forEach((social, idx) => {
+                                socialMessage += `${idx + 1}. ${social.name} - [${social.url}](${social.url})\n`;
+                            });
+                            socialMessage += `\n📐 **Disposition:** ${config.socialButtonsPerRow || 2} bouton(s) par ligne`;
+                        } else {
+                            socialMessage += '_Aucun réseau social configuré_';
+                        }
+                        await updateMessage(chatId, messageId, socialMessage, {
+                            parse_mode: 'Markdown',
+                            reply_markup: getSocialManageKeyboard()
+                        });
+                    }
+                }
+                // Gestion de la disposition des boutons sociaux (ancien code)
                 else if (data.startsWith('social_layout_')) {
                     const buttonsPerRow = parseInt(data.replace('social_layout_', ''));
                     config.socialButtonsPerRow = buttonsPerRow;
