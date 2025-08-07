@@ -1,9 +1,7 @@
 services:
   - type: web
-    name: telegram-bot-lanation
+    name: bot-telegram-fas
     runtime: node
-    repo: https://github.com/votre-username/votre-repo
-    branch: main
     buildCommand: npm install
     startCommand: node bot.js
     envVars:
